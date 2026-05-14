@@ -1,6 +1,9 @@
 package com.newspecs
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,15 +44,16 @@ class NewsAdapter(
         holder.sourceTag.setTextColor(item.sourceColor)
         holder.timeAgo.text = item.timeAgo
 
-        // Semi-transparent tag background matching source color
+        // Colored outlined tag: semi-transparent fill + colored stroke, matching widget look
         val c = item.sourceColor
-        val bg = android.graphics.Color.argb(30,
-            android.graphics.Color.red(c),
-            android.graphics.Color.green(c),
-            android.graphics.Color.blue(c))
-        holder.sourceTag.setBackgroundColor(bg)
+        holder.sourceTag.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 3f.dp(context)
+            setColor(Color.argb(22, Color.red(c), Color.green(c), Color.blue(c)))
+            setStroke(1f.dp(context).toInt(), Color.argb(110, Color.red(c), Color.green(c), Color.blue(c)))
+        }
 
-        // Set placeholder immediately; replace with favicon when loaded
+        // Set placeholder immediately; replace with real favicon when loaded
         holder.favicon.setImageBitmap(FaviconLoader.createPlaceholder(item.source, item.sourceColor))
         holder.favicon.tag = item.source
 
@@ -65,6 +69,9 @@ class NewsAdapter(
 
         holder.itemView.setOnClickListener { onItemClick(item) }
     }
+
+    private fun Float.dp(ctx: Context) =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this, ctx.resources.displayMetrics)
 
     class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         val favicon: ImageView = v.findViewById(R.id.favicon)

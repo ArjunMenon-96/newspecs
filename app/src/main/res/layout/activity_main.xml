@@ -32,7 +32,7 @@
             android:id="@+id/live_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="● live"
+            android:text="● updating"
             android:textColor="@color/green"
             android:textSize="7sp"
             android:fontFamily="monospace"
@@ -112,9 +112,10 @@
             android:letterSpacing="0.05" />
 
         <TextView
+            android:id="@+id/next_refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="↻ 5 min"
+            android:text="REFRESH IN 5:00"
             android:textColor="@color/text_faint"
             android:textSize="8sp"
             android:fontFamily="monospace"
