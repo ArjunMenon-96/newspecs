@@ -40,18 +40,17 @@ class NewsWidget : AppWidgetProvider() {
             return maxOf(available / ROW_HEIGHT_DP, MIN_ROWS)
         }
 
+        // Blocking — must be called from a background thread (e.g. inside goAsync coroutine)
         fun triggerUpdate(context: Context) {
             val mgr = AppWidgetManager.getInstance(context)
             val ids = mgr.getAppWidgetIds(ComponentName(context, NewsWidget::class.java))
             if (ids.isEmpty()) return
-            CoroutineScope(Dispatchers.IO).launch {
-                val news = NewsFetcher.fetch()
-                if (news.isNotEmpty()) NewsCache.save(context, news)
-                for (id in ids) {
-                    val opts = mgr.getAppWidgetOptions(id)
-                    val views = buildViews(context, id, opts)
-                    mgr.updateAppWidget(id, views)
-                }
+            val news = NewsFetcher.fetch()
+            if (news.isNotEmpty()) NewsCache.save(context, news)
+            for (id in ids) {
+                val opts = mgr.getAppWidgetOptions(id)
+                val views = buildViews(context, id, opts)
+                mgr.updateAppWidget(id, views)
             }
         }
 
@@ -156,7 +155,7 @@ class NewsWidget : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-        triggerUpdate(context)
+        // handled in onReceive with goAsync so Android doesn't kill the process mid-fetch
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -169,9 +168,16 @@ class NewsWidget : AppWidgetProvider() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
         when (intent.action) {
-            ACTION_AUTO_REFRESH, ACTION_MANUAL_REFRESH -> triggerUpdate(context)
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE,
+            ACTION_AUTO_REFRESH,
+            ACTION_MANUAL_REFRESH -> {
+                val pending = goAsync()
+                CoroutineScope(Dispatchers.IO).launch {
+                    try { triggerUpdate(context) } finally { pending.finish() }
+                }
+            }
+            else -> super.onReceive(context, intent)
         }
     }
 

@@ -1,49 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  newspecs app icon foreground.
-  Kerala state silhouette (filled gold) centred in the 108×108dp safe zone.
-  Two small signal dots at the bottom represent live updates.
--->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Kerala silhouette — filled, warm gold -->
-    <path
-        android:fillColor="#D4A85A"
-        android:pathData="
-            M54,16
-            C59,16 65,20 67,26
-            C69,32 68,38 69,44
-            C70,50 70,55 68,61
-            C66,67 63,73 60,78
-            C58,82 56,86 54,89
-            C52,86 50,82 48,78
-            C45,73 42,67 40,61
-            C38,55 38,50 39,44
-            C40,38 39,32 41,26
-            C43,20 49,16 54,16 Z" />
-
-    <!-- Live pulse dots — three arcs suggesting a signal/broadcast -->
+    <!-- Outer ring -->
     <path
         android:strokeColor="#D4A85A"
-        android:strokeWidth="2.2"
+        android:strokeWidth="2.5"
         android:fillColor="#00000000"
-        android:strokeLineCap="round"
-        android:pathData="M42,94 A12,12 0 0 1 66,94" />
-    <path
-        android:strokeColor="#D4A85A"
-        android:strokeWidth="2.2"
-        android:fillColor="#00000000"
-        android:strokeLineCap="round"
-        android:strokeAlpha="0.55"
-        android:pathData="M37,98 A17,17 0 0 1 71,98" />
+        android:pathData="M54,21 A33,33 0 1,0 54,87 A33,33 0 1,0 54,21" />
 
-    <!-- Centre dot -->
+    <!-- North needle — gold, pointing up -->
     <path
         android:fillColor="#D4A85A"
-        android:pathData="M54,93 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        android:pathData="M54,25 L58,54 L54,50 L50,54 Z" />
+
+    <!-- South needle — faded -->
+    <path
+        android:fillColor="#D4A85A"
+        android:fillAlpha="0.22"
+        android:pathData="M54,83 L58,54 L54,58 L50,54 Z" />
+
+    <!-- Center pin -->
+    <path
+        android:fillColor="#0D1A10"
+        android:pathData="M50,54 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path
+        android:strokeColor="#D4A85A"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000"
+        android:pathData="M50,54 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
 
 </vector>
