@@ -21,8 +21,7 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:scaleType="fitCenter"
-            android:layout_marginEnd="7dp"
-            android:src="@drawable/ic_kerala_map" />
+            android:layout_marginEnd="7dp" />
 
         <TextView
             android:id="@+id/source_tag"

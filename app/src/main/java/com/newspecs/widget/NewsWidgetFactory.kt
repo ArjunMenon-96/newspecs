@@ -56,12 +56,8 @@ class NewsWidgetFactory(
         // Favicon — try cache first, fall back to Kerala map vector
         val domain  = NewsItem.toDomainForFavicon(item.source)
         val favicon = FaviconLoader.get(context, domain)
-        if (favicon != null) {
-            views.setImageViewBitmap(R.id.favicon, favicon)
-        } else {
-            views.setImageViewResource(R.id.favicon, R.drawable.ic_kerala_map)
-            views.setInt(R.id.favicon, "setColorFilter", item.sourceColor)
-        }
+            ?: FaviconLoader.createPlaceholder(item.source, item.sourceColor)
+        views.setImageViewBitmap(R.id.favicon, favicon)
 
         // Row tap — fill in the article URI so the PendingIntentTemplate resolves correctly
         val fillIn = Intent().apply { data = Uri.parse(item.link) }

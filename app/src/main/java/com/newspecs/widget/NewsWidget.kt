@@ -51,6 +51,8 @@ class NewsWidget : AppWidgetProvider() {
                 val opts = mgr.getAppWidgetOptions(id)
                 val views = buildViews(context, id, opts)
                 mgr.updateAppWidget(id, views)
+                // Without this the factory's cached item list is never flushed on refresh
+                mgr.notifyAppWidgetViewDataChanged(id, R.id.news_list)
             }
         }
 
@@ -91,7 +93,9 @@ class NewsWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_name, "newspecs")
             views.setTextViewText(R.id.update_time, currentTime())
 
-            // Reload button
+            // Root and reload button both trigger refresh; root handler prevents taps
+            // on empty areas from falling through to the launcher and opening the app
+            views.setOnClickPendingIntent(R.id.widget_root, manualRefreshPi(context))
             views.setOnClickPendingIntent(R.id.reload_btn, manualRefreshPi(context))
 
             // Footer

@@ -1,7 +1,6 @@
 package com.newspecs
 
 import android.content.Context
-import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,20 +49,16 @@ class NewsAdapter(
             android.graphics.Color.blue(c))
         holder.sourceTag.setBackgroundColor(bg)
 
-        // Reset favicon to fallback while loading
-        holder.favicon.setImageResource(R.drawable.ic_kerala_map)
-        holder.favicon.setColorFilter(item.sourceColor, PorterDuff.Mode.SRC_IN)
+        // Set placeholder immediately; replace with favicon when loaded
+        holder.favicon.setImageBitmap(FaviconLoader.createPlaceholder(item.source, item.sourceColor))
         holder.favicon.tag = item.source
 
         val domain = NewsItem.toDomainForFavicon(item.source)
         CoroutineScope(Dispatchers.IO).launch {
             val bmp = FaviconLoader.get(context, domain)
             withContext(Dispatchers.Main) {
-                if (holder.favicon.tag == item.source) {
-                    if (bmp != null) {
-                        holder.favicon.setImageBitmap(bmp)
-                        holder.favicon.clearColorFilter()
-                    }
+                if (holder.favicon.tag == item.source && bmp != null) {
+                    holder.favicon.setImageBitmap(bmp)
                 }
             }
         }

@@ -5,6 +5,7 @@
   The ListView naturally shows as many rows as fit the available height.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -63,11 +64,11 @@
 
         <ImageView
             android:id="@+id/reload_btn"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@drawable/ic_reload"
             android:background="@drawable/reload_button_bg"
-            android:padding="6dp"
+            android:padding="8dp"
             android:scaleType="fitCenter" />
 
     </LinearLayout>
