@@ -5,8 +5,18 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 object NewsCache {
-    private const val PREFS = "newspecs_cache"
-    private const val KEY   = "news_json"
+    private const val PREFS            = "newspecs_cache"
+    private const val KEY              = "news_json"
+    private const val KEY_REFRESH_TIME = "last_refresh_ms"
+
+    fun saveRefreshTime(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putLong(KEY_REFRESH_TIME, System.currentTimeMillis()).apply()
+    }
+
+    fun getRefreshTime(context: Context): Long =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getLong(KEY_REFRESH_TIME, 0L)
 
     fun save(context: Context, items: List<NewsItem>) {
         val arr = JSONArray()

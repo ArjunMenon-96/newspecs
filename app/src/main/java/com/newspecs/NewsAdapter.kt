@@ -14,6 +14,8 @@ import com.newspecs.data.FaviconLoader
 import com.newspecs.data.NewsItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -44,7 +46,6 @@ class NewsAdapter(
         holder.sourceTag.setTextColor(item.sourceColor)
         holder.timeAgo.text = item.timeAgo
 
-        // Colored outlined tag: semi-transparent fill + colored stroke, matching widget look
         val c = item.sourceColor
         holder.sourceTag.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -53,30 +54,44 @@ class NewsAdapter(
             setStroke(1f.dp(context).toInt(), Color.argb(110, Color.red(c), Color.green(c), Color.blue(c)))
         }
 
-        // Set placeholder immediately; replace with real favicon when loaded
-        holder.favicon.setImageBitmap(FaviconLoader.createPlaceholder(item.source, item.sourceColor))
-        holder.favicon.tag = item.source
-
-        val domain = NewsItem.toDomainForFavicon(item.source)
-        CoroutineScope(Dispatchers.IO).launch {
-            val bmp = FaviconLoader.get(context, domain)
-            withContext(Dispatchers.Main) {
-                if (holder.favicon.tag == item.source && bmp != null) {
-                    holder.favicon.setImageBitmap(bmp)
-                }
-            }
-        }
-
+        holder.loadFavicon(context, item)
         holder.itemView.setOnClickListener { onItemClick(item) }
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        super.onViewRecycled(holder)
+        holder.cancelFavicon()
     }
 
     private fun Float.dp(ctx: Context) =
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, this, ctx.resources.displayMetrics)
 
     class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-        val favicon: ImageView = v.findViewById(R.id.favicon)
+        val favicon: ImageView  = v.findViewById(R.id.favicon)
         val sourceTag: TextView = v.findViewById(R.id.source_tag)
-        val timeAgo: TextView = v.findViewById(R.id.time_ago)
-        val headline: TextView = v.findViewById(R.id.headline)
+        val timeAgo: TextView   = v.findViewById(R.id.time_ago)
+        val headline: TextView  = v.findViewById(R.id.headline)
+
+        private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+        private var faviconJob: Job? = null
+
+        fun loadFavicon(context: Context, item: NewsItem) {
+            faviconJob?.cancel()
+            favicon.setImageBitmap(FaviconLoader.createPlaceholder(item.source, item.sourceColor))
+            favicon.tag = item.source
+            faviconJob = scope.launch(Dispatchers.IO) {
+                val bmp = FaviconLoader.get(context, NewsItem.toDomainForFavicon(item.source))
+                withContext(Dispatchers.Main) {
+                    if (favicon.tag == item.source && bmp != null) {
+                        favicon.setImageBitmap(bmp)
+                    }
+                }
+            }
+        }
+
+        fun cancelFavicon() {
+            faviconJob?.cancel()
+            faviconJob = null
+        }
     }
 }

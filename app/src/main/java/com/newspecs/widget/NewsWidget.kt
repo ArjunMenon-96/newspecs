@@ -46,7 +46,10 @@ class NewsWidget : AppWidgetProvider() {
             val ids = mgr.getAppWidgetIds(ComponentName(context, NewsWidget::class.java))
             if (ids.isEmpty()) return
             val news = NewsFetcher.fetch()
-            if (news.isNotEmpty()) NewsCache.save(context, news)
+            if (news.isNotEmpty()) {
+                NewsCache.save(context, news)
+                NewsCache.saveRefreshTime(context)
+            }
             for (id in ids) {
                 val opts = mgr.getAppWidgetOptions(id)
                 val views = buildViews(context, id, opts)
@@ -101,7 +104,11 @@ class NewsWidget : AppWidgetProvider() {
             // Footer
             val count = minOf(news.size, rows)
             views.setTextViewText(R.id.story_count, "$count stories · <24h")
-            views.setTextViewText(R.id.next_refresh, "↻ 5 min")
+            val remaining = ((NewsCache.getRefreshTime(context) + INTERVAL_MS) - System.currentTimeMillis())
+                .coerceAtLeast(0L)
+            val m = remaining / 60_000
+            val s = (remaining % 60_000) / 1000
+            views.setTextViewText(R.id.next_refresh, "Refresh in %d:%02d".format(m, s))
 
             return views
         }

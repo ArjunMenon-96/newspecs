@@ -20,11 +20,8 @@ class NewsWidgetFactory(
     private var items: List<NewsItem> = emptyList()
 
     override fun onCreate() { reload() }
-
     override fun onDataSetChanged() { reload() }
-
     override fun onDestroy() {}
-
     override fun getCount() = items.size
 
     override fun getViewAt(position: Int): RemoteViews {
@@ -33,33 +30,23 @@ class NewsWidgetFactory(
 
         val views = RemoteViews(context.packageName, R.layout.widget_item)
 
-        // Headline
         views.setTextViewText(R.id.headline, item.title)
         views.setTextColor(R.id.headline, Color.parseColor("#B8B4A6"))
 
-        // Source tag text + color
         views.setTextViewText(R.id.source_tag, item.shortSource)
         views.setTextColor(R.id.source_tag, item.sourceColor)
+        // Use a static per-source drawable so the colored stroke border is preserved
+        // (setBackgroundColor via reflection replaces the drawable, losing the stroke)
+        views.setInt(R.id.source_tag, "setBackgroundResource", tagBgRes(item.source))
 
-        // Tag border tint via background — we overlay a semi-transparent version of the source color
-        val tagBgColor = Color.argb(28,
-            Color.red(item.sourceColor),
-            Color.green(item.sourceColor),
-            Color.blue(item.sourceColor)
-        )
-        views.setInt(R.id.source_tag, "setBackgroundColor", tagBgColor)
-
-        // Time
         views.setTextViewText(R.id.time_ago, item.timeAgo)
         views.setTextColor(R.id.time_ago, Color.parseColor("#3E3E38"))
 
-        // Favicon — try cache first, fall back to Kerala map vector
         val domain  = NewsItem.toDomainForFavicon(item.source)
         val favicon = FaviconLoader.get(context, domain)
             ?: FaviconLoader.createPlaceholder(item.source, item.sourceColor)
         views.setImageViewBitmap(R.id.favicon, favicon)
 
-        // Row tap — fill in the article URI so the PendingIntentTemplate resolves correctly
         val fillIn = Intent().apply { data = Uri.parse(item.link) }
         views.setOnClickFillInIntent(R.id.item_root, fillIn)
 
@@ -67,14 +54,21 @@ class NewsWidgetFactory(
     }
 
     override fun getLoadingView(): RemoteViews? = null
-
     override fun getViewTypeCount() = 1
-
     override fun getItemId(position: Int) = items.getOrNull(position)?.pubDateMs ?: position.toLong()
-
     override fun hasStableIds() = true
 
     private fun reload() {
         items = NewsCache.load(context).take(maxRows)
+    }
+
+    private fun tagBgRes(source: String): Int = when {
+        source.contains("Manorama",    true) -> R.drawable.tag_bg_manorama
+        source.contains("Asianet",     true) -> R.drawable.tag_bg_asianet
+        source.contains("News18",      true) -> R.drawable.tag_bg_news18
+        source.contains("Mathrubhumi", true) -> R.drawable.tag_bg_mathrubhumi
+        source.contains("Samayam",     true) -> R.drawable.tag_bg_samayam
+        source.contains("Express",     true) -> R.drawable.tag_bg_ie
+        else                                 -> R.drawable.tag_bg_default
     }
 }

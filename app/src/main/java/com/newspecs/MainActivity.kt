@@ -71,6 +71,18 @@ class MainActivity : AppCompatActivity() {
             adapter.submitList(cached)
             storyCount.text = "${cached.size} STORIES · <24H"
         }
+        // Recalculate remaining time from stored refresh timestamp and restart timer
+        val lastRefresh = NewsCache.getRefreshTime(this)
+        if (lastRefresh > 0) {
+            val remaining = ((lastRefresh + refreshIntervalMs) - System.currentTimeMillis())
+                .coerceAtLeast(0L)
+            if (remaining > 0) startCountdown(remaining) else refresh()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        countdown?.cancel()
     }
 
     override fun onDestroy() {
@@ -84,6 +96,7 @@ class MainActivity : AppCompatActivity() {
             val news = NewsFetcher.fetch()
             if (news.isNotEmpty()) {
                 NewsCache.save(this@MainActivity, news)
+                NewsCache.saveRefreshTime(this@MainActivity)
                 withContext(Dispatchers.Main) {
                     adapter.submitList(news)
                     updateTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
