@@ -16,9 +16,10 @@ class BootReceiver : BroadcastReceiver() {
         val ids = mgr.getAppWidgetIds(ComponentName(context, NewsWidget::class.java))
         if (ids.isNotEmpty()) {
             NewsWidget.scheduleRefresh(context)
+            val appCtx = context.applicationContext
             val pending = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
-                try { NewsWidget.triggerUpdate(context) } finally { pending.finish() }
+                try { NewsWidget.triggerUpdate(appCtx) } finally { pending.finish() }
             }
         }
     }

@@ -1,46 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Single news row inside the ListView.
-  Height: ~62dp (meta row ~16dp + headline ~38dp + vertical padding ~8dp).
-  No horizontal padding — the ListView itself carries 13dp start/end.
--->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="9dp"
-    android:paddingBottom="9dp">
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
     <!-- Meta row: favicon | source tag | time -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="16dp"
+        android:layout_height="18dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="4dp">
+        android:layout_marginBottom="5dp">
 
         <ImageView
             android:id="@+id/favicon"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:scaleType="fitCenter"
-            android:layout_marginEnd="5dp" />
+            android:layout_marginEnd="6dp" />
 
         <TextView
             android:id="@+id/source_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Source"
-            android:textSize="7sp"
+            android:textSize="8sp"
             android:fontFamily="monospace"
             android:textAllCaps="true"
-            android:letterSpacing="0.05"
+            android:letterSpacing="0.06"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
-            android:paddingTop="1dp"
-            android:paddingBottom="1dp"
-            android:background="@drawable/tag_border_bg" />
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:background="@drawable/tag_bg_default" />
 
         <TextView
             android:id="@+id/time_ago"
@@ -62,8 +57,8 @@
         android:layout_height="wrap_content"
         android:text=""
         android:textColor="@color/text_secondary"
-        android:textSize="12sp"
-        android:lineSpacingMultiplier="1.5"
+        android:textSize="13sp"
+        android:lineSpacingMultiplier="1.4"
         android:maxLines="2"
         android:ellipsize="end" />
 

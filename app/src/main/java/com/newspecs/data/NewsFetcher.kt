@@ -11,7 +11,7 @@ object NewsFetcher {
     private const val FEED_URL =
         "https://news.google.com/rss/search?q=kerala&hl=ml&gl=IN&ceid=IN:ml"
     private const val MAX_AGE_MS   = 24 * 60 * 60 * 1000L
-    private const val TIMEOUT_MS   = 15_000
+    private const val TIMEOUT_MS   = 8_000  // must stay within goAsync 10s limit on API 31+
     private val DATE_FMT = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
 
     fun fetch(): List<NewsItem> {
@@ -26,7 +26,7 @@ object NewsFetcher {
         val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
             connectTimeout = TIMEOUT_MS
             readTimeout    = TIMEOUT_MS
-            setRequestProperty("User-Agent", "newspecs/1.0 Android")
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
         }
         conn.inputStream.bufferedReader().use { it.readText() }
             .also { conn.disconnect() }

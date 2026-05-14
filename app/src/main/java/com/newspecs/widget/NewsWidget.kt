@@ -27,55 +27,63 @@ class NewsWidget : AppWidgetProvider() {
         const val ACTION_AUTO_REFRESH   = "com.newspecs.AUTO_REFRESH"
         const val ACTION_MANUAL_REFRESH = "com.newspecs.MANUAL_REFRESH"
         private const val RC_REFRESH    = 1001
-        private const val INTERVAL_MS   = 5 * 60 * 1000L   // 5 minutes
+        const val INTERVAL_MS           = 5 * 60 * 1000L
 
-        // Row heights in dp; must match widget_item.xml's approximate measured height
-        private const val ROW_HEIGHT_DP  = 62
-        private const val HEADER_DP      = 44
-        private const val FOOTER_DP      = 30
-        private const val MIN_ROWS       = 5
+        private const val ROW_HEIGHT_DP = 68
+        private const val HEADER_DP     = 48
+        private const val FOOTER_DP     = 30
+        private const val MIN_ROWS      = 5
 
-        fun calculateRows(heightDp: Int): Int {
-            val available = heightDp - HEADER_DP - FOOTER_DP
-            return maxOf(available / ROW_HEIGHT_DP, MIN_ROWS)
-        }
+        fun calculateRows(heightDp: Int): Int =
+            maxOf((heightDp - HEADER_DP - FOOTER_DP) / ROW_HEIGHT_DP, MIN_ROWS)
 
-        // Blocking — must be called from a background thread (e.g. inside goAsync coroutine)
-        fun triggerUpdate(context: Context) {
-            val mgr = AppWidgetManager.getInstance(context)
-            val ids = mgr.getAppWidgetIds(ComponentName(context, NewsWidget::class.java))
-            if (ids.isEmpty()) return
+        /**
+         * Two-phase update:
+         * 1. Immediately push cached data to the widget (so it never stays blank)
+         * 2. Fetch fresh data, save, then push again
+         *
+         * Must be called from a background thread. Always uses applicationContext
+         * so it's safe to call from a BroadcastReceiver coroutine.
+         */
+        fun triggerUpdate(context: Context, explicitIds: IntArray? = null) {
+            val ctx = context.applicationContext
+            val mgr = AppWidgetManager.getInstance(ctx)
+            val ids = (explicitIds?.takeIf { it.isNotEmpty() }
+                ?: mgr.getAppWidgetIds(ComponentName(ctx, NewsWidget::class.java)))
+                .also { if (it.isEmpty()) return }
+
+            // Phase 1 — show whatever is already cached (instant, no network)
+            pushViews(ctx, mgr, ids)
+
+            // Phase 2 — fetch, save, push again with fresh data
             val news = NewsFetcher.fetch()
             if (news.isNotEmpty()) {
-                NewsCache.save(context, news)
-                NewsCache.saveRefreshTime(context)
+                NewsCache.save(ctx, news)
+                NewsCache.saveRefreshTime(ctx)
+                pushViews(ctx, mgr, ids)
             }
+        }
+
+        private fun pushViews(ctx: Context, mgr: AppWidgetManager, ids: IntArray) {
             for (id in ids) {
-                val opts = mgr.getAppWidgetOptions(id)
-                val views = buildViews(context, id, opts)
+                val views = buildViews(ctx, id, mgr.getAppWidgetOptions(id))
                 mgr.updateAppWidget(id, views)
-                // Without this the factory's cached item list is never flushed on refresh
                 mgr.notifyAppWidgetViewDataChanged(id, R.id.news_list)
             }
         }
 
         fun buildViews(context: Context, widgetId: Int, opts: Bundle): RemoteViews {
-            val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250)
+            val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320)
             val minH = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 180)
-            return if (minW < 150 || minH < 100) {
-                buildSingleViews(context, widgetId)
-            } else {
-                buildListViews(context, widgetId, minH)
-            }
+            return if (minW < 150 || minH < 100) buildSingleViews(context, widgetId)
+            else buildListViews(context, widgetId, minH)
         }
 
-        // Full list widget (standard and large sizes)
         private fun buildListViews(context: Context, widgetId: Int, heightDp: Int): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_layout)
             val news  = NewsCache.load(context)
             val rows  = calculateRows(heightDp)
 
-            // Adapter service intent — unique URI per widget + row count so factory is recreated on resize
             val svcIntent = Intent(context, NewsWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 putExtra(NewsWidgetService.EXTRA_MAX_ROWS, rows)
@@ -84,7 +92,6 @@ class NewsWidget : AppWidgetProvider() {
             views.setRemoteAdapter(R.id.news_list, svcIntent)
             views.setEmptyView(R.id.news_list, R.id.empty_view)
 
-            // Tap on a row opens the article
             val itemTemplate = PendingIntent.getActivity(
                 context, 0,
                 Intent(Intent.ACTION_VIEW),
@@ -92,16 +99,11 @@ class NewsWidget : AppWidgetProvider() {
             )
             views.setPendingIntentTemplate(R.id.news_list, itemTemplate)
 
-            // Header
             views.setTextViewText(R.id.widget_name, "newspecs")
             views.setTextViewText(R.id.update_time, currentTime())
-
-            // Root and reload button both trigger refresh; root handler prevents taps
-            // on empty areas from falling through to the launcher and opening the app
             views.setOnClickPendingIntent(R.id.widget_root, manualRefreshPi(context))
             views.setOnClickPendingIntent(R.id.reload_btn, manualRefreshPi(context))
 
-            // Footer
             val count = minOf(news.size, rows)
             views.setTextViewText(R.id.story_count, "$count stories · <24h")
             val remaining = ((NewsCache.getRefreshTime(context) + INTERVAL_MS) - System.currentTimeMillis())
@@ -113,22 +115,21 @@ class NewsWidget : AppWidgetProvider() {
             return views
         }
 
-        // Minimal widget for very small sizes (shows only top headline)
         private fun buildSingleViews(context: Context, widgetId: Int): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_small)
             val news  = NewsCache.load(context)
             views.setTextViewText(R.id.widget_name, "newspecs")
             if (news.isNotEmpty()) {
                 val top = news[0]
-                views.setTextViewText(R.id.headline,  top.title)
+                views.setTextViewText(R.id.headline, top.title)
                 views.setTextViewText(R.id.source_tag, top.shortSource)
-                views.setTextViewText(R.id.time_ago,   top.timeAgo)
-                val articleIntent = Intent(Intent.ACTION_VIEW, Uri.parse(top.link))
-                val articlePi = PendingIntent.getActivity(
-                    context, widgetId, articleIntent,
+                views.setTextViewText(R.id.time_ago, top.timeAgo)
+                val pi = PendingIntent.getActivity(
+                    context, widgetId,
+                    Intent(Intent.ACTION_VIEW, Uri.parse(top.link)),
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                views.setOnClickPendingIntent(R.id.headline, articlePi)
+                views.setOnClickPendingIntent(R.id.headline, pi)
             }
             views.setOnClickPendingIntent(R.id.reload_btn, manualRefreshPi(context))
             return views
@@ -166,13 +167,12 @@ class NewsWidget : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-        // handled in onReceive with goAsync so Android doesn't kill the process mid-fetch
+        // Handled in onReceive using goAsync so Android doesn't kill the process mid-fetch
     }
 
     override fun onAppWidgetOptionsChanged(
         context: Context, mgr: AppWidgetManager, widgetId: Int, newOpts: Bundle
     ) {
-        // Rebuild views for new size; notify list adapter to refresh item count
         val views = buildViews(context, widgetId, newOpts)
         mgr.updateAppWidget(widgetId, views)
         mgr.notifyAppWidgetViewDataChanged(widgetId, R.id.news_list)
@@ -183,9 +183,13 @@ class NewsWidget : AppWidgetProvider() {
             AppWidgetManager.ACTION_APPWIDGET_UPDATE,
             ACTION_AUTO_REFRESH,
             ACTION_MANUAL_REFRESH -> {
+                // Extract IDs from the intent when present — more reliable than
+                // getAppWidgetIds() at first-placement time
+                val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+                val appCtx = context.applicationContext
                 val pending = goAsync()
                 CoroutineScope(Dispatchers.IO).launch {
-                    try { triggerUpdate(context) } finally { pending.finish() }
+                    try { triggerUpdate(appCtx, ids) } finally { pending.finish() }
                 }
             }
             else -> super.onReceive(context, intent)
