@@ -31,24 +31,17 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease --stacktrace
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
 
-      - name: Sign APK (debug keystore for sideloading)
-        run: |
-          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner sign \
-            --ks ~/.android/debug.keystore \
-            --ks-key-alias androiddebugkey \
-            --ks-pass pass:android \
-            --key-pass pass:android \
-            --out app/build/outputs/apk/release/newspecs.apk \
-            app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/newspecs.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: newspecs-apk
-          path: app/build/outputs/apk/release/newspecs.apk
+          path: app/build/outputs/apk/debug/newspecs.apk
           retention-days: 30
 
       - name: Create GitHub Release
@@ -72,7 +65,7 @@ jobs:
             - Per-source colour-coded tags (Manorama, Asianet, News18, Mathrubhumi…)
             - Favicon per source, Kerala map fallback
             - Dark Ghostletter-inspired theme
-          files: app/build/outputs/apk/release/newspecs.apk
+          files: app/build/outputs/apk/debug/newspecs.apk
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
