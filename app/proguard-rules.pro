@@ -1,0 +1,3 @@
+-keep class com.newspecs.widget.** { *; }
+-keep class com.newspecs.data.** { *; }
+-keepattributes *Annotation*

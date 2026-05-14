@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget dark theme palette -->
+    <color name="widget_bg">#0C0C09</color>
+    <color name="widget_surface">#141410</color>
+    <color name="widget_card">#111110</color>
+    <color name="border">#232320</color>
+
+    <color name="text_primary">#D8D4C4</color>
+    <color name="text_secondary">#B8B4A6</color>
+    <color name="text_muted">#8A8678</color>
+    <color name="text_faint">#3E3E38</color>
+
+    <color name="green">#4E9E64</color>
+
+    <!-- Per-source accent colors -->
+    <color name="source_manorama">#D4826A</color>
+    <color name="source_asianet">#6AAAD4</color>
+    <color name="source_news18">#8AB86A</color>
+    <color name="source_mathrubhumi">#A882D4</color>
+    <color name="source_samayam">#D4B06A</color>
+    <color name="source_ie">#6AB8B8</color>
+</resources>

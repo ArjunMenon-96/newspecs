@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="widget_corner_radius">14dp</dimen>
+    <dimen name="widget_padding_horizontal">13dp</dimen>
+    <dimen name="header_height">44dp</dimen>
+    <dimen name="footer_height">30dp</dimen>
+    <dimen name="row_height">62dp</dimen>
+    <dimen name="favicon_size">14dp</dimen>
+</resources>

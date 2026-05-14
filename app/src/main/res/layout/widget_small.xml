@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minimal widget for very small sizes — shows top headline only -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="0dp">
+
+    <!-- Mini header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="@drawable/widget_header_bg"
+        android:orientation="horizontal"
+        android:paddingStart="11dp"
+        android:paddingEnd="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="newspecs"
+            android:textColor="@color/text_primary"
+            android:textSize="9sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:letterSpacing="0.06" />
+
+        <ImageView
+            android:id="@+id/reload_btn"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_reload"
+            android:background="@drawable/reload_button_bg"
+            android:padding="5dp"
+            android:scaleType="fitCenter" />
+    </LinearLayout>
+
+    <!-- Body -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="11dp"
+        android:paddingEnd="11dp"
+        android:paddingTop="9dp"
+        android:paddingBottom="8dp">
+
+        <!-- Meta -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="5dp">
+
+            <TextView
+                android:id="@+id/source_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Source"
+                android:textColor="@color/text_muted"
+                android:textSize="7sp"
+                android:fontFamily="monospace"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:background="@drawable/tag_border_bg" />
+
+            <TextView
+                android:id="@+id/time_ago"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="—"
+                android:textColor="@color/text_faint"
+                android:textSize="7sp"
+                android:fontFamily="monospace"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/headline"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="11.5sp"
+            android:lineSpacingMultiplier="1.5"
+            android:ellipsize="end"
+            android:maxLines="4" />
+
+    </LinearLayout>
+
+</LinearLayout>

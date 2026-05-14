@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Widget provider metadata.
+
+  Size guide (Android cell formula: dp = 74n − 2):
+    2 cells wide  = 146dp    3 cells wide  = 220dp
+    4 cells wide  = 294dp    2 cells tall  = 146dp
+    3 cells tall  = 220dp    4 cells tall  = 294dp
+
+  minResizeWidth/Height define the smallest the user can drag it to.
+  resizeMode="horizontal|vertical" lets users freely resize.
+  targetCellWidth/Height (API 31+) gives the launcher a suggested default size.
+
+  updatePeriodMillis is set to 1800000 (30 min, Android minimum) but
+  the app uses AlarmManager for actual 5-min refreshes.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="180dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
+    android:maxResizeWidth="500dp"
+    android:maxResizeHeight="900dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="100dp"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/widget_layout"
+    android:previewLayout="@layout/widget_layout"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_description" />

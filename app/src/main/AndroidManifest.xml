@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Needed to fetch data even when the device is idle -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <!--
+          AppWidgetProvider — receives APPWIDGET_UPDATE, our custom refresh actions,
+          and exposes the widget metadata via the appwidget meta-data tag.
+        -->
+        <receiver
+            android:name=".widget.NewsWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.newspecs.AUTO_REFRESH" />
+                <action android:name="com.newspecs.MANUAL_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
+        <!--
+          RemoteViewsService — provides the factory that backs the news ListView.
+          Must be exported with BIND_REMOTEVIEWS permission so the launcher can bind to it.
+        -->
+        <service
+            android:name=".widget.NewsWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!--
+          BootReceiver — reschedules the 5-min AlarmManager alarm after a device reboot
+          so the widget keeps refreshing without user interaction.
+        -->
+        <receiver
+            android:name=".widget.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

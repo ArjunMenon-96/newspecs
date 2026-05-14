@@ -1,0 +1,78 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.6'
+
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version=8.6 --distribution-type=bin
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Sign APK (debug keystore for sideloading)
+        run: |
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)/apksigner sign \
+            --ks ~/.android/debug.keystore \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out app/build/outputs/apk/release/newspecs.apk \
+            app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: newspecs-apk
+          path: app/build/outputs/apk/release/newspecs.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "newspecs v1.0.${{ github.run_number }}"
+          body: |
+            ## newspecs — Malayalam News Widget
+
+            ### Install
+            1. Download `newspecs.apk`
+            2. On your Android phone: **Settings → Install unknown apps** → allow your browser/Files app
+            3. Open the downloaded APK and install
+            4. Long-press your home screen → **Widgets** → find **newspecs** → drag onto screen
+
+            ### What's in this build
+            - Google News Malayalam RSS feed (live, <24h only)
+            - 5-minute auto-refresh via AlarmManager
+            - Resizable widget — rows fill available height (min 5)
+            - Per-source colour-coded tags (Manorama, Asianet, News18, Mathrubhumi…)
+            - Favicon per source, Kerala map fallback
+            - Dark Ghostletter-inspired theme
+          files: app/build/outputs/apk/release/newspecs.apk
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
