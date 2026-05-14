@@ -1,3 +1,2 @@
--keep class com.newspecs.widget.** { *; }
--keep class com.newspecs.data.** { *; }
+-keep class com.newspecs.** { *; }
 -keepattributes *Annotation*
