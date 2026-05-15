@@ -30,6 +30,19 @@ object FaviconLoader {
         }
     }
 
+    /**
+     * Returns the favicon from disk cache only — no network call.
+     * Safe to call on the main thread (used in Phase 1 / widget build path).
+     * Returns null if not yet cached; caller should fall back to createPlaceholder().
+     */
+    fun getFromDiskCacheOnly(context: Context, domain: String): Bitmap? {
+        if (domain.isBlank()) return null
+        val cacheFile = File(context.cacheDir, "fav_${domain.replace(".", "_")}.png")
+        return if (cacheFile.exists() && cacheFile.lastModified() > System.currentTimeMillis() - 86_400_000) {
+            BitmapFactory.decodeFile(cacheFile.absolutePath)
+        } else null
+    }
+
     private fun download(domain: String): Bitmap? = try {
         val url = FAVICON_API.format(domain)
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
