@@ -31,15 +31,9 @@ class NewsWidget : AppWidgetProvider() {
         private const val RC_REFRESH    = 1001
         const val INTERVAL_MS           = 5 * 60 * 1000L
 
-        private const val ROW_HEIGHT_DP = 68
-        private const val HEADER_DP     = 48
-        private const val FOOTER_DP     = 30
-        private const val MIN_ROWS      = 5
-        private const val MAX_ROWS      = 12   // (900-48-30)/68 ≈ 12
-
-        fun calculateRows(heightDp: Int): Int =
-            maxOf((heightDp - HEADER_DP - FOOTER_DP) / ROW_HEIGHT_DP, MIN_ROWS)
-                .coerceAtMost(MAX_ROWS)
+        // Maximum items injected into the widget — one call's worth of RSS results.
+        // ScrollView handles any overflow; the user can scroll to see all of them.
+        private const val MAX_ROWS = 15
 
         /**
          * Two-phase update — called on a background thread from NewsRefreshService.
@@ -82,28 +76,23 @@ class NewsWidget : AppWidgetProvider() {
         }
 
         fun buildViews(context: Context, widgetId: Int, opts: Bundle): RemoteViews {
-            val widthDp  = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,   320)
-            // MAX_HEIGHT = portrait height (the one that grows when the user drags taller).
-            // MIN_HEIGHT = landscape height — always smaller, wrong value for row calculation.
-            val heightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT,  180)
+            val widthDp  = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,  320)
+            val heightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 180)
             return if (widthDp < 150 || heightDp < 100) buildSingleViews(context, widgetId)
-            else buildListViews(context, widgetId, heightDp)
+            else buildListViews(context, widgetId)
         }
 
         /**
          * Builds the full-size widget RemoteViews.
          *
-         * Items are added directly to news_container via addView() — no ListView,
-         * no RemoteViewsService binding, no factory. Each row is a RemoteViews
-         * inflated from widget_item.xml with content set inline.
-         *
-         * Favicons use disk-cache only (getFromDiskCacheOnly) so this is safe to
-         * call on any thread, including the main thread for Phase 1 pushes.
+         * ALL available items (up to MAX_ROWS) are injected into a ScrollView-backed
+         * LinearLayout via addView(). The user can scroll within the widget to see
+         * every headline; extending the widget height simply exposes more rows without
+         * requiring a re-fetch. No row-count math needed.
          */
-        private fun buildListViews(context: Context, widgetId: Int, heightDp: Int): RemoteViews {
+        private fun buildListViews(context: Context, widgetId: Int): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_layout)
-            val rows  = calculateRows(heightDp)
-            val news  = NewsCache.load(context).take(rows)
+            val news  = NewsCache.load(context).take(MAX_ROWS)
 
             // Header
             views.setTextViewText(R.id.widget_name, "newspecs")
@@ -123,15 +112,15 @@ class NewsWidget : AppWidgetProvider() {
             // so without this call each updateAppWidget doubles up the rows.
             views.removeAllViews(R.id.news_container)
 
-            // Empty state
+            // Empty state — toggle between scroll area and placeholder text
             if (news.isEmpty()) {
-                views.setViewVisibility(R.id.news_container, View.GONE)
+                views.setViewVisibility(R.id.news_scroll, View.GONE)
                 views.setViewVisibility(R.id.empty_view, View.VISIBLE)
                 return views
             }
 
             views.setViewVisibility(R.id.empty_view, View.GONE)
-            views.setViewVisibility(R.id.news_container, View.VISIBLE)
+            views.setViewVisibility(R.id.news_scroll, View.VISIBLE)
 
             // Inject each news item as a RemoteViews row directly into the container
             news.forEachIndexed { i, item ->
@@ -222,7 +211,7 @@ class NewsWidget : AppWidgetProvider() {
 
         private fun manualRefreshPi(context: Context) = PendingIntent.getBroadcast(
             context, RC_REFRESH + 1,
-            Intent(context, NewsWidget::class.java).apply { action = ACTION_MANUAL_REFRESH },
+            Intent(context, NewsWidget::class.java).setAction(ACTION_MANUAL_REFRESH),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 

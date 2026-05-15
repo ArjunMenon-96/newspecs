@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Full list widget — used for all sizes ≥ ~150×100dp.
-  LinearLayout (vertical): header | news_container (weight=1) | footer
+  LinearLayout (vertical): header | ScrollView (weight=1) | footer
 
-  News items are pushed into news_container via RemoteViews.addView() directly
-  from NewsWidget.buildListViews() — no RemoteViewsService or ListView binding
-  required. This is the most reliable pattern across all Android launchers.
+  The ScrollView lets the user scroll through all headlines inside the widget.
+  When the widget is made taller, more rows become visible without re-injection;
+  items are always injected via RemoteViews.addView() into news_container.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
@@ -77,19 +77,30 @@
     </LinearLayout>
 
     <!--
-      News container — items injected at runtime via RemoteViews.addView().
-      Padding mirrors what the old ListView had so items are indented correctly.
+      ScrollView fills all space between header and footer.
+      The user can scroll through headlines inside the widget;
+      extending the widget height reveals more rows without re-fetch.
     -->
-    <LinearLayout
-        android:id="@+id/news_container"
+    <ScrollView
+        android:id="@+id/news_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="13dp"
-        android:paddingEnd="13dp" />
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:fillViewport="true">
 
-    <!-- Empty / loading state — visible when cache is empty -->
+        <LinearLayout
+            android:id="@+id/news_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="13dp" />
+
+    </ScrollView>
+
+    <!-- Empty / loading state — shown when cache is empty -->
     <TextView
         android:id="@+id/empty_view"
         android:layout_width="match_parent"
