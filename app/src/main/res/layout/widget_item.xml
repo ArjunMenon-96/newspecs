@@ -50,7 +50,7 @@
 
     </LinearLayout>
 
-    <!-- Headline -->
+    <!-- Headline — no truncation, full text always visible -->
     <TextView
         android:id="@+id/headline"
         android:layout_width="match_parent"
@@ -58,8 +58,6 @@
         android:text=""
         android:textColor="@color/text_secondary"
         android:textSize="13sp"
-        android:lineSpacingMultiplier="1.4"
-        android:maxLines="2"
-        android:ellipsize="end" />
+        android:lineSpacingMultiplier="1.4" />
 
 </LinearLayout>

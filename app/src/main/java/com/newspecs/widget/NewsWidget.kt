@@ -112,15 +112,15 @@ class NewsWidget : AppWidgetProvider() {
             // so without this call each updateAppWidget doubles up the rows.
             views.removeAllViews(R.id.news_container)
 
-            // Empty state — toggle between scroll area and placeholder text
+            // Empty state — toggle between news container and placeholder text
             if (news.isEmpty()) {
-                views.setViewVisibility(R.id.news_scroll, View.GONE)
+                views.setViewVisibility(R.id.news_container, View.GONE)
                 views.setViewVisibility(R.id.empty_view, View.VISIBLE)
                 return views
             }
 
             views.setViewVisibility(R.id.empty_view, View.GONE)
-            views.setViewVisibility(R.id.news_scroll, View.VISIBLE)
+            views.setViewVisibility(R.id.news_container, View.VISIBLE)
 
             // Inject each news item as a RemoteViews row directly into the container
             news.forEachIndexed { i, item ->
