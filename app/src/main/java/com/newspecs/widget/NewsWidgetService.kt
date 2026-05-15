@@ -13,7 +13,7 @@ class NewsWidgetService : RemoteViewsService() {
         val widgetId = intent.getIntExtra(
             android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID, -1
         )
-        val maxRows = intent.getIntExtra(EXTRA_MAX_ROWS, NewsWidget.calculateRows(300))
+        val maxRows = intent.getIntExtra(EXTRA_MAX_ROWS, 10)
         return NewsWidgetFactory(applicationContext, widgetId, maxRows)
     }
 }
