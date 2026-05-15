@@ -82,10 +82,12 @@ class NewsWidget : AppWidgetProvider() {
         }
 
         fun buildViews(context: Context, widgetId: Int, opts: Bundle): RemoteViews {
-            val minW = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320)
-            val minH = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 180)
-            return if (minW < 150 || minH < 100) buildSingleViews(context, widgetId)
-            else buildListViews(context, widgetId, minH)
+            val widthDp  = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,   320)
+            // MAX_HEIGHT = portrait height (the one that grows when the user drags taller).
+            // MIN_HEIGHT = landscape height — always smaller, wrong value for row calculation.
+            val heightDp = opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT,  180)
+            return if (widthDp < 150 || heightDp < 100) buildSingleViews(context, widgetId)
+            else buildListViews(context, widgetId, heightDp)
         }
 
         /**
@@ -116,6 +118,10 @@ class NewsWidget : AppWidgetProvider() {
             val m = remaining / 60_000
             val s = (remaining % 60_000) / 1000
             views.setTextViewText(R.id.next_refresh, "↻ %d:%02d".format(m, s))
+
+            // Clear any rows from a previous reapply — addView() appends, not replaces,
+            // so without this call each updateAppWidget doubles up the rows.
+            views.removeAllViews(R.id.news_container)
 
             // Empty state
             if (news.isEmpty()) {
