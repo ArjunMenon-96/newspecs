@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Needed to fetch data even when the device is idle -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- ForegroundService — required to call startForeground() -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- API 34+ requires a type-specific foreground service permission -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:allowBackup="true"
@@ -49,6 +53,17 @@
             android:name=".widget.NewsWidgetService"
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!--
+          NewsRefreshService — ForegroundService that performs the network fetch.
+          Replaces the old goAsync() approach; has no time limit so the fetch
+          always completes even on slow connections / Doze-waking radios.
+          foregroundServiceType="dataSync" is required on API 34+.
+        -->
+        <service
+            android:name=".widget.NewsRefreshService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <!--
           BootReceiver — reschedules the 5-min AlarmManager alarm after a device reboot

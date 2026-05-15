@@ -11,12 +11,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.widget.RemoteViews
+import androidx.core.content.ContextCompat
 import com.newspecs.R
 import com.newspecs.data.NewsCache
 import com.newspecs.data.NewsFetcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -87,7 +85,8 @@ class NewsWidget : AppWidgetProvider() {
             val svcIntent = Intent(context, NewsWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 putExtra(NewsWidgetService.EXTRA_MAX_ROWS, rows)
-                data = Uri.parse("newspecs://widget/$widgetId/$rows")
+                val cacheState = if (news.isEmpty()) "empty" else "loaded"
+                data = Uri.parse("newspecs://widget/$widgetId/$rows/$cacheState")
             }
             views.setRemoteAdapter(R.id.news_list, svcIntent)
             views.setEmptyView(R.id.news_list, R.id.empty_view)
@@ -167,7 +166,10 @@ class NewsWidget : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
-        // Handled in onReceive using goAsync so Android doesn't kill the process mid-fetch
+        // Push cached data immediately (Phase 1), then start service for network fetch (Phase 2)
+        val ctx = context.applicationContext
+        pushViews(ctx, mgr, ids)
+        ContextCompat.startForegroundService(ctx, Intent(ctx, NewsRefreshService::class.java))
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -183,14 +185,27 @@ class NewsWidget : AppWidgetProvider() {
             AppWidgetManager.ACTION_APPWIDGET_UPDATE,
             ACTION_AUTO_REFRESH,
             ACTION_MANUAL_REFRESH -> {
-                // Extract IDs from the intent when present — more reliable than
-                // getAppWidgetIds() at first-placement time
+                val ctx = context.applicationContext
+                val mgr = AppWidgetManager.getInstance(ctx)
+                // Resolve widget IDs — prefer explicit IDs from the intent (more
+                // reliable at first-placement time), fall back to all registered IDs.
                 val ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
-                val appCtx = context.applicationContext
-                val pending = goAsync()
-                CoroutineScope(Dispatchers.IO).launch {
-                    try { triggerUpdate(appCtx, ids) } finally { pending.finish() }
-                }
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: mgr.getAppWidgetIds(ComponentName(ctx, NewsWidget::class.java))
+
+                if (ids.isEmpty()) return
+
+                // Phase 1 — push cached data right now, on the main thread.
+                // SharedPreferences read + RemoteViews build is <5 ms; well within
+                // the BroadcastReceiver window and requires zero network access.
+                pushViews(ctx, mgr, ids)
+
+                // Phase 2 — ForegroundService handles the network fetch with no
+                // time limit (replaces the old goAsync() approach which was killed
+                // by Android 12+ after 10 s).
+                ContextCompat.startForegroundService(
+                    ctx, Intent(ctx, NewsRefreshService::class.java)
+                )
             }
             else -> super.onReceive(context, intent)
         }

@@ -1,36 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Logo F — square-lens glasses.
+  Two rounded-rect lenses (rx=8) with a short bridge, centred in the 108×108
+  safe zone. Gold stroke (#BFA05A) on transparent fill, plus subtle glare dots.
+  Viewport: 108×108  |  Glasses span: x 16–92, y 41–67 (76×26dp)
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Outer ring -->
+    <!-- Left lens: x=16 y=41 w=30 h=26 rx=8 -->
     <path
-        android:strokeColor="#D4A85A"
-        android:strokeWidth="2.5"
         android:fillColor="#00000000"
-        android:pathData="M54,21 A33,33 0 1,0 54,87 A33,33 0 1,0 54,21" />
+        android:strokeColor="#BFA05A"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 24,41 H 38 Q 46,41 46,49 V 59 Q 46,67 38,67 H 24 Q 16,67 16,59 V 49 Q 16,41 24,41 Z" />
 
-    <!-- North needle — gold, pointing up -->
+    <!-- Right lens: x=62 y=41 w=30 h=26 rx=8 -->
     <path
-        android:fillColor="#D4A85A"
-        android:pathData="M54,25 L58,54 L54,50 L50,54 Z" />
-
-    <!-- South needle — faded -->
-    <path
-        android:fillColor="#D4A85A"
-        android:fillAlpha="0.22"
-        android:pathData="M54,83 L58,54 L54,58 L50,54 Z" />
-
-    <!-- Center pin -->
-    <path
-        android:fillColor="#0D1A10"
-        android:pathData="M50,54 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
-    <path
-        android:strokeColor="#D4A85A"
-        android:strokeWidth="1.8"
         android:fillColor="#00000000"
-        android:pathData="M50,54 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+        android:strokeColor="#BFA05A"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 70,41 H 84 Q 92,41 92,49 V 59 Q 92,67 84,67 H 70 Q 62,67 62,59 V 49 Q 62,41 70,41 Z" />
+
+    <!-- Bridge -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#BFA05A"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M 46,54 L 62,54" />
+
+    <!-- Glare dot — left lens -->
+    <path
+        android:fillColor="#40BFA05A"
+        android:pathData="M 22,43.5 A 2.5,2.5,0,1,0 22,48.5 A 2.5,2.5,0,1,0 22,43.5 Z" />
+
+    <!-- Glare dot — right lens -->
+    <path
+        android:fillColor="#40BFA05A"
+        android:pathData="M 68,43.5 A 2.5,2.5,0,1,0 68,48.5 A 2.5,2.5,0,1,0 68,43.5 Z" />
 
 </vector>

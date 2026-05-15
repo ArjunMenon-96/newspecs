@@ -5,22 +5,18 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import androidx.core.content.ContextCompat
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
-        val mgr = AppWidgetManager.getInstance(context)
-        val ids = mgr.getAppWidgetIds(ComponentName(context, NewsWidget::class.java))
+        val ctx = context.applicationContext
+        val mgr = AppWidgetManager.getInstance(ctx)
+        val ids = mgr.getAppWidgetIds(ComponentName(ctx, NewsWidget::class.java))
         if (ids.isNotEmpty()) {
-            NewsWidget.scheduleRefresh(context)
-            val appCtx = context.applicationContext
-            val pending = goAsync()
-            CoroutineScope(Dispatchers.IO).launch {
-                try { NewsWidget.triggerUpdate(appCtx) } finally { pending.finish() }
-            }
+            NewsWidget.scheduleRefresh(ctx)
+            // ForegroundService handles the fetch — no goAsync() needed
+            ContextCompat.startForegroundService(ctx, Intent(ctx, NewsRefreshService::class.java))
         }
     }
 }
